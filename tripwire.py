@@ -83,7 +83,7 @@ def tvRoom(scene): # smart relay
     if scene == "off" and not saveState[2]:
         sendData(url(group), off)
         return
-    else:h
+    else:
         saveState[2] = True
         return
 
