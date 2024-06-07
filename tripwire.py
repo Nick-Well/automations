@@ -32,6 +32,7 @@ ultrasonic = DistanceSensor(echo=27, trigger=17, max_distance=2)
 
 # this is not very dynamic :/ but it does the job. memory
 saveState = [False, False, False]
+saveSelf = [False, False, False]
 
 
 def lightStatus(light, mode ):
@@ -39,7 +40,6 @@ def lightStatus(light, mode ):
 
 def sendData(url, data = "{}"):
     rq.put(url, data=data, headers=headers)
-    print(f"{url} {data} {headers}")
 
 def url(group, scene = "off" ):
     if scene != "off":
@@ -51,11 +51,13 @@ def url(group, scene = "off" ):
 def kitchen(scene): # smart lightbulb
 
     group = 1
-    if not lightStatus(2, "lights") and not saveState[0] and scene != "off": # some magic, checking if the light is turned on so it doesnt turned it off after counter
+    if not lightStatus(2, "lights") and not saveState[0] and scene != "off" or saveSelf[0] and scene != "off": # some magic, checking if the light is turned on so it doesnt turned it off after counter
         sendData(url(group, scene))
+        saveSelf[0] = True
         return
-    if scene == "off" and not saveState[0]:
+    if scene == "off" and not saveState[2] and saveSelf[0]:
         sendData(url(group), off)
+        saveSelf[0] = False
         return
     else:
         saveState[0] = True
@@ -64,11 +66,13 @@ def kitchen(scene): # smart lightbulb
 def frontDoor(scene): # smart lightbulb
 
     group = 10
-    if not lightStatus(6, "lights") and not saveState[1] and scene != "off":
+    if not lightStatus(6, "lights") and not saveState[1] and scene != "off" or saveSelf[1] and scene != "off":
         sendData(url(group, scene))
+        saveSelf[1] = True
         return
-    if scene == "off" and not saveState[1]:
+    if scene == "off" and not saveState[2] and saveSelf[1]:
         sendData(url(group), off)
+        saveSelf[1] = False
         return
     else:
         saveState[1] = True
@@ -77,11 +81,13 @@ def frontDoor(scene): # smart lightbulb
 def tvRoom(scene): # smart relay
 
     group = 7
-    if not lightStatus(5, "lights") and not saveState[2] and scene != "off": 
+    if not lightStatus(5, "lights") and not saveState[2] and scene != "off" or saveSelf[2] and scene != "off":
         sendData(url(group), on)
+        saveSelf[2] = True
         return
-    if scene == "off" and not saveState[2]:
+    if scene == "off" and not saveState[2] and saveSelf[2]:
         sendData(url(group), off)
+        saveSelf[2] = False
         return
     else:
         saveState[2] = True
@@ -117,7 +123,6 @@ def log(timeStamp):
 def fancyLop(loop):
 
     os.system('cls' if os.name == 'nt' else 'clear')
-    #print("\n" * 10)
     print(".=" * loop * loop + ".")
     if loop > 5:
         loop = 0
@@ -128,13 +133,12 @@ print("starting loop :) HF <3")
 
 try:
     while True:
-        
+
         cm = int(ultrasonic.distance * 100)
         rightNow = int(time.time())
         currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         currentHour = int(time.strftime("%H", time.localtime()))
         plusOnly = timer - rightNow
-        #print(f"{rightNow} {aliveTimer} {timer} {plusOnly}")
         if plusOnly > 0 and plusOnly <= aliveTimer:
             print(plusOnly)
 
@@ -152,37 +156,5 @@ try:
         #loop = fancyLop(loop) #just for looks :)
         time.sleep(0.1)
 
-#try:
-#    cm = int(ultrasonic.distance * 100)
-#    rightNow = int(time.time())
-#    currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-#    currentHour = int(time.strftime("%H", time.localtime()))
-#    plusOnly = timer - rightNow
-#    if plusOnly > 0 and plusOnly <= aliveTimer:
-#        print(plusOnly)
-#
-#    if cm < activationRange:
-#        print(f"{currentTime} some one walked past {cm} cm")
-#        log(currentTime)
-#        if currentHour >= activeTime or currentHour <= inActiveTime:
-#            timer = rightNow + aliveTimer
-#            all_lamps("on")
-#        time.sleep(1)
-#
-#    elif timer <= rightNow:
-#        timer = 99999999999
-#        all_lamps("off")
-#    #loop = fancyLop(loop)
-#    time.sleep(0.1)
-#    all_lamps("off")
-
 except KeyboardInterrupt:
-    #all_lamps("off")
     print ("\nexit")
-
-
-
-
-
-
-
