@@ -55,7 +55,7 @@ def kitchen(scene): # smart lightbulb
         sendData(url(group, scene))
         saveSelf[0] = True
         return
-    if scene == "off" and not saveState[2] and saveSelf[0]:
+    if scene == "off" and not saveState[0] and saveSelf[0]:
         sendData(url(group), off)
         saveSelf[0] = False
         return
