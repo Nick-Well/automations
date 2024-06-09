@@ -49,48 +49,51 @@ def url(group, scene = "off" ):
     return url
 
 def kitchen(scene): # smart lightbulb
-
+    
+    index = 0
     group = 1
-    if not lightStatus(2, "lights") and not saveState[0] and scene != "off" or saveSelf[0] and scene != "off": # some magic, checking if the light is turned on so it doesnt turned it off after counter
+    if not lightStatus(2, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off": # some magic, checking if the light is turned on so it doesnt turned it off after counter
         sendData(url(group, scene))
-        saveSelf[0] = True
+        saveSelf[index] = True
         return
-    if scene == "off" and not saveState[0] and saveSelf[0]:
+    if scene == "off" and not saveState[index] and saveSelf[index]:
         sendData(url(group), off)
-        saveSelf[0] = False
+        saveSelf[index] = False
         return
     else:
-        saveState[0] = True
+        saveState[index] = True
         return
 
 def frontDoor(scene): # smart lightbulb
 
+    index = 1
     group = 10
-    if not lightStatus(6, "lights") and not saveState[1] and scene != "off" or saveSelf[1] and scene != "off":
+    if not lightStatus(6, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off":
         sendData(url(group, scene))
-        saveSelf[1] = True
+        saveSelf[index] = True
         return
-    if scene == "off" and not saveState[2] and saveSelf[1]:
+    if scene == "off" and not saveState[index] and saveSelf[index]:
         sendData(url(group), off)
-        saveSelf[1] = False
+        saveSelf[index] = False
         return
     else:
-        saveState[1] = True
+        saveState[index] = True
         return
 
 def tvRoom(scene): # smart relay
 
+    index = 2
     group = 7
-    if not lightStatus(5, "lights") and not saveState[2] and scene != "off" or saveSelf[2] and scene != "off":
+    if not lightStatus(5, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off": 
         sendData(url(group), on)
-        saveSelf[2] = True
+        saveSelf[index] = True
         return
-    if scene == "off" and not saveState[2] and saveSelf[2]:
+    if scene == "off" and not saveState[index] and saveSelf[index]:
         sendData(url(group), off)
-        saveSelf[2] = False
+        saveSelf[index] = False
         return
     else:
-        saveState[2] = True
+        saveState[index] = True
         return
 
 def all_lamps(scene):
