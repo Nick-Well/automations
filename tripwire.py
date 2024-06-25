@@ -49,9 +49,11 @@ def url(group, scene = "off" ):
     return url
 
 def kitchen(scene): # smart lightbulb
-    
     index = 0
     group = 1
+    if lightStatus(2, "lights") != saveState[index]:
+        saveState[index] = False
+
     if not lightStatus(2, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off": # some magic, checking if the light is turned on so it doesnt turned it off after counter
         sendData(url(group, scene))
         saveSelf[index] = True
@@ -68,6 +70,9 @@ def frontDoor(scene): # smart lightbulb
 
     index = 1
     group = 10
+    if lightStatus(6, "lights") != saveState[index]:
+        saveState[index] = False
+
     if not lightStatus(6, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off":
         sendData(url(group, scene))
         saveSelf[index] = True
@@ -84,7 +89,10 @@ def tvRoom(scene): # smart relay
 
     index = 2
     group = 7
-    if not lightStatus(5, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off": 
+    if lightStatus(5, "lights") != saveState[index]:
+        saveState[index] = False
+
+    if not lightStatus(5, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off":
         sendData(url(group), on)
         saveSelf[index] = True
         return
