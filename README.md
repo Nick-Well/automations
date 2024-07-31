@@ -4,7 +4,7 @@ Require some docker countaners.\
 
 ### CheckIPvpn.sh
 it checks ip address against a couple api's every now and then. to check that the ip is static.
-Sends ip over signal and restarts the wireguard docker with the correct ip.
+Sends ip over signal and restarts the wireguard docker with the correct ip.\
 \
 docker:    bbernhard/signal-cli-rest-api:latest\
 api's:     ifconfig, api.ipify, icanhazip, checkip.amazonaws, wtfismyip\
