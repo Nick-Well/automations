@@ -8,13 +8,13 @@ Sends ip over signal and restarts the wireguard docker with the correct ip.\
 \
 docker:    bbernhard/signal-cli-rest-api:latest\
 api's:     ifconfig, api.ipify, icanhazip, checkip.amazonaws, wtfismyip
-\
+
 ### lights.sh
 turnes on lights att sundown. unless sundown past 10pm\
 \
 docker:    deconzcommunity/deconz:latest\
 api:       api.sunrise-sunset
-\
+
 ### tripwire.py
 ultra sunic "tripwire".
 Aktivates lights att night wen passing by the tripwire.\
