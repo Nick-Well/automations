@@ -3,10 +3,11 @@
 from gpiozero import Device, DistanceSensor
 from gpiozero.pins.pigpio import PiGPIOFactory
 import requests as rq
+import schedule as sc
 import time
 import os
 
-debug = False
+debug = "no"
 
 on = '{"on":true}' # shorten calls
 off = '{"on":false}'
@@ -15,12 +16,10 @@ headers = {"Content-Type": "application/json"}
 ip = (open("ip","r")).read().rstrip() # format "http://ip:port/api/apikey/"
 
 timer = 99999999999 # place holder
-aliveMin = 5 
+aliveMin = 5
 aliveTimer = (60 * aliveMin) #change to minuts sleep
 plusOnly = 90000 # place holder
 
-activeTime = 22 # at what time the tripwire is active
-inActiveTime = 4 # intill
 
 # ultrasonic distins to the wall
 activationRange = 80 #cm
@@ -35,6 +34,26 @@ ultrasonic = DistanceSensor(echo=27, trigger=17, max_distance=2)
 saveState = [False, False, False]
 saveSelf = [False, False, False]
 
+
+def get_sunset():
+    return rq.get("https://api.sunrise-sunset.org/json?lat=57.4870365&lng=12.5616751&tzid=Europe/Stockholm&date=today&formatted=0").json()['results']['sunset'].split("T")[1].split(":")
+
+activeHour = int(get_sunset()[0])
+activeMin = int(get_sunset()[1])
+
+def get_sunrise():
+    return rq.get("https://api.sunrise-sunset.org/json?lat=57.4870365&lng=12.5616751&tzid=Europe/Stockholm&date=today&formatted=0").json()['results']['sunrise'].split("T")[1].split(":")
+
+inActiveTime = int(get_sunrise()[0])
+
+
+sc.every().day.at("12:30").do(get_sunset)
+sc.every().day.at("12:30").do(get_sunrise)
+
+
+def timeUpdate():
+    activeHour = int(get_sunset()[0]) # at what time the tripwire is active
+    activeMin = int(get_sunset()[1])
 
 def lightStatus(light, mode ):
     return rq.get(f"{ip}{mode}/{light}/").json()["state"]["on"]
@@ -96,7 +115,7 @@ def tvRoom(scene): # smart relay
     if lightStatus(light, "lights") != saveState[index]:
         saveState[index] = False
 
-    if not lightStatus(light, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off": 
+    if not lightStatus(light, "lights") and not saveState[index] and scene != "off" or saveSelf[index] and scene != "off":
         sendData(url(group), on)
         saveSelf[index] = True
         return
@@ -138,6 +157,7 @@ def log(timeStamp):
 def fancyLop(loop):
 
     os.system('cls' if os.name == 'nt' else 'clear')
+    #print("\n" * 10)
     print(".=" * loop * loop + ".")
     if loop > 5:
         loop = 0
@@ -147,43 +167,52 @@ def fancyLop(loop):
 print("starting loop :) HF <3")
 
 try:
-    if not debug:
+    if debug == "yes":
+         print(saveSelf)
+         time.sleep(2)
+         all_lamps("on")
+         time.sleep(2)
+         all_lamps("on")
+         print(saveSelf)
+         time.sleep(2)
+         all_lamps("off")
+         print(saveSelf)
+
+    else:
 
         while True:
+
+            sc.run_pending()
             cm = int(ultrasonic.distance * 100)
             rightNow = int(time.time())
             currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            currentMin = int(time.strftime("%M", time.localtime()))
             currentHour = int(time.strftime("%H", time.localtime()))
             plusOnly = timer - rightNow
+            #print(f"{rightNow} {aliveTimer} {timer} {plusOnly}")
+
             if plusOnly > 0 and plusOnly <= aliveTimer:
                 print(plusOnly)
-    
+
             if cm < activationRange:
+
                 print(f"{currentTime} some one walked past {cm} cm")
                 log(currentTime)
-                if currentHour >= activeTime or currentHour <= inActiveTime:
+
+                if (currentHour >= activeHour and currentMin >= activeMin) or (currentHour <= inActiveTime):
+                    timeUpdate()
                     timer = rightNow + aliveTimer
                     all_lamps("on")
                 time.sleep(1)
-    
+
             elif timer <= rightNow:
+
                 timer = 99999999999
                 all_lamps("off")
+
             #loop = fancyLop(loop) #just for looks :)
             time.sleep(0.1)
-    
-    else:
-    
-        all_lamps("on")
-        print(saveSelf)
-        time.sleep(2)
-        all_lamps("on")
-        time.sleep(2)
-        all_lamps("on")
-        print(saveSelf)
-        time.sleep(2)
-        all_lamps("off")
-        print(saveSelf)
-        
+
 except KeyboardInterrupt:
+    #all_lamps("off")
     print ("\nexit")
