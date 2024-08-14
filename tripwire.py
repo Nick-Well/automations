@@ -3,7 +3,6 @@
 from gpiozero import Device, DistanceSensor
 from gpiozero.pins.pigpio import PiGPIOFactory
 import requests as rq
-import schedule as sc
 import time
 import os
 
@@ -34,26 +33,22 @@ ultrasonic = DistanceSensor(echo=27, trigger=17, max_distance=2)
 saveState = [False, False, False]
 saveSelf = [False, False, False]
 
+activeHour = 22
+activeMin = 00
+
+inActiveTime = 5
 
 def get_sunset():
-    return rq.get("https://api.sunrise-sunset.org/json?lat=57.4870365&lng=12.5616751&tzid=Europe/Stockholm&date=today&formatted=0").json()['results']['sunset'].split("T")[1].split(":")
-
-activeHour = int(get_sunset()[0])
-activeMin = int(get_sunset()[1])
+    activeHour = (open("sunset_file","r")).read().rstrip().split(":")[0]
+    activeMin = (open("sunset_file","r")).read().rstrip().split(":")[1]
 
 def get_sunrise():
-    return rq.get("https://api.sunrise-sunset.org/json?lat=57.4870365&lng=12.5616751&tzid=Europe/Stockholm&date=today&formatted=0").json()['results']['sunrise'].split("T")[1].split(":")
-
-inActiveTime = int(get_sunrise()[0])
-
-
-sc.every().day.at("12:30").do(get_sunset)
-sc.every().day.at("12:30").do(get_sunrise)
+    inActiveTime = (open("sunrise_file","r")).read().rstrip()
 
 
 def timeUpdate():
-    activeHour = int(get_sunset()[0]) # at what time the tripwire is active
-    activeMin = int(get_sunset()[1])
+    get_sunset()
+    get_sunrise()
 
 def lightStatus(light, mode ):
     return rq.get(f"{ip}{mode}/{light}/").json()["state"]["on"]
@@ -165,7 +160,6 @@ def fancyLop(loop):
     return loop
 
 print("starting loop :) HF <3")
-
 try:
     if debug == "yes":
          print(saveSelf)
@@ -182,7 +176,6 @@ try:
 
         while True:
 
-            sc.run_pending()
             cm = int(ultrasonic.distance * 100)
             rightNow = int(time.time())
             currentTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -199,7 +192,7 @@ try:
                 print(f"{currentTime} some one walked past {cm} cm")
                 log(currentTime)
 
-                if (currentHour >= activeHour and currentMin >= activeMin) or (currentHour <= inActiveTime):
+                if currentHour >= activeHour or currentHour <= inActiveTime:
                     timeUpdate()
                     timer = rightNow + aliveTimer
                     all_lamps("on")
