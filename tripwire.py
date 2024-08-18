@@ -12,6 +12,8 @@ on = '{"on":true}' # shorten calls
 off = '{"on":false}'
 headers = {"Content-Type": "application/json"}
 
+api = "https://api.sunrise-sunset.org/json?lat=57.4870365&lng=12.5616751&tzid=Europe/Stockholm&date=today&formatted=0"
+
 ip = (open("ip","r")).read().rstrip() # format "http://ip:port/api/apikey/"
 
 timer = 99999999999 # place holder
@@ -39,16 +41,20 @@ activeMin = 00
 inActiveTime = 5
 
 def get_sunset():
-    activeHour = (open("sunset_file","r")).read().rstrip().split(":")[0]
-    activeMin = (open("sunset_file","r")).read().rstrip().split(":")[1]
+    global activeHour
+    global activeMin
+    activeHour = int((open("sunset_file","r")).read().rstrip().split(":")[0])
+    activeMin = int((open("sunset_file","r")).read().rstrip().split(":")[1])
 
 def get_sunrise():
-    inActiveTime = (open("sunrise_file","r")).read().rstrip()
+    global inActiveTime
+    inActiveTime = int((open("sunrise_file","r")).read().rstrip())
 
 
 def timeUpdate():
     get_sunset()
     get_sunrise()
+
 
 def lightStatus(light, mode ):
     return rq.get(f"{ip}{mode}/{light}/").json()["state"]["on"]
@@ -182,8 +188,6 @@ try:
             currentMin = int(time.strftime("%M", time.localtime()))
             currentHour = int(time.strftime("%H", time.localtime()))
             plusOnly = timer - rightNow
-            #print(f"{rightNow} {aliveTimer} {timer} {plusOnly}")
-
             if plusOnly > 0 and plusOnly <= aliveTimer:
                 print(plusOnly)
 
@@ -192,8 +196,9 @@ try:
                 print(f"{currentTime} some one walked past {cm} cm")
                 log(currentTime)
 
-                if currentHour >= activeHour or currentHour <= inActiveTime:
-                    timeUpdate()
+                timeUpdate()
+
+                if (currentHour > activeHour or currentHour == activeHour and currentMin >= activeMin) or currentHour <= inActiveTime:
                     timer = rightNow + aliveTimer
                     all_lamps("on")
                 time.sleep(1)
