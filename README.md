@@ -20,3 +20,8 @@ ultra sunic "tripwire".
 Aktivates lights att night wen passing by the tripwire.\
 \
 docker:    deconzcommunity/deconz:latest
+
+### night.py
+Checks wen the sun goes down creats 2 files that gets read by tripwire.py\
+\
+api:      api.sunrise-sunset
